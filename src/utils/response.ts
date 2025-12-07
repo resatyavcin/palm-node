@@ -1,95 +1,121 @@
 import { Response } from "express";
-
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-  timestamp: string;
-  statusCode: number;
-}
-
-interface SuccessParams<T = any> {
-  response: Response;
-  data: T;
-  message?: string;
-  statusCode?: number;
-}
-
-interface ErrorParams {
-  response: Response;
-  error: string | Error;
-  message?: string;
-  statusCode?: number;
-}
+import { MessageHelper } from "./messages";
+import {
+  type SuccessResponse,
+  type ErrorResponse,
+  type SuccessParams,
+  type ErrorParams,
+} from "../types";
 
 export class ResponseHelper {
-  static success<T>(params: SuccessParams<T>): Response {
-    const { response, data, message, statusCode = 200 } = params;
+  static async success<T>(params: SuccessParams<T>): Promise<Response> {
+    const { response, request, data, messageKey, message, statusCode } = params;
 
-    const apiResponse: ApiResponse<T> = {
+    let finalMessage: string;
+    let finalStatusCode: number;
+
+    if (message) {
+      // Direkt mesaj verilmişse onu kullan
+      finalMessage = message;
+      finalStatusCode = statusCode || 200;
+    } else if (messageKey) {
+      // messageKey verilmişse DB'den çek
+      const messageData = await MessageHelper.getSuccessMessage(
+        messageKey,
+        request
+      );
+      finalMessage = messageData.message;
+      finalStatusCode = statusCode || messageData.statusCode;
+    } else {
+      // İkisi de yoksa default
+      const messageData = await MessageHelper.getSuccessMessage(
+        "default",
+        request
+      );
+      finalMessage = messageData.message;
+      finalStatusCode = statusCode || messageData.statusCode;
+    }
+
+    const apiResponse: SuccessResponse<T> = {
       success: true,
       data,
-      message,
+      message: finalMessage,
       timestamp: new Date().toISOString(),
-      statusCode,
+      statusCode: finalStatusCode,
     };
 
-    return response.status(statusCode).json(apiResponse);
+    return response.status(finalStatusCode).json(apiResponse);
   }
 
-  static error(params: ErrorParams): Response {
-    const { response, error, message, statusCode = 500 } = params;
-    const errorMessage = error instanceof Error ? error.message : error;
+  static async error(params: ErrorParams): Promise<Response> {
+    const {
+      response,
+      request,
+      messageKey,
+      message,
+      errorKey,
+      error,
+      statusCode,
+    } = params;
 
-    const apiResponse: ApiResponse = {
+    let finalMessage: string;
+    let finalError: string;
+    let friendlyMessage: string | undefined;
+    let description: string | undefined;
+    let isBusinessError: boolean = false;
+    let finalStatusCode: number;
+
+    if (message) {
+      // Direkt mesaj verilmişse
+      finalMessage = message;
+      finalError = error || message;
+      finalStatusCode = statusCode || 500;
+    } else if (messageKey) {
+      // messageKey verilmişse DB'den çek
+      const errorInfo = await MessageHelper.getErrorMessage(
+        messageKey,
+        request
+      );
+      finalMessage = errorInfo.message;
+      finalStatusCode = statusCode || errorInfo.statusCode;
+      friendlyMessage = errorInfo.friendlyMessage;
+      description = errorInfo.description;
+      isBusinessError = errorInfo.isBusinessError;
+
+      // Error mesajını belirle: errorKey varsa ondan, yoksa error parametresinden, yoksa message'dan
+      if (errorKey) {
+        const errorKeyInfo = await MessageHelper.getErrorMessage(
+          errorKey,
+          request
+        );
+        finalError = errorKeyInfo.message;
+      } else if (error) {
+        finalError = error;
+      } else {
+        finalError = finalMessage;
+      }
+    } else {
+      // İkisi de yoksa default
+      const errorInfo = await MessageHelper.getErrorMessage("default", request);
+      finalMessage = errorInfo.message;
+      finalError = error || finalMessage;
+      finalStatusCode = statusCode || errorInfo.statusCode;
+      friendlyMessage = errorInfo.friendlyMessage;
+      description = errorInfo.description;
+      isBusinessError = errorInfo.isBusinessError;
+    }
+
+    const apiResponse: ErrorResponse = {
       success: false,
-      error: errorMessage,
-      message,
+      error: finalError,
+      message: finalMessage,
+      friendlyMessage,
+      description,
+      isBusinessError,
       timestamp: new Date().toISOString(),
-      statusCode,
+      statusCode: finalStatusCode,
     };
 
-    return response.status(statusCode).json(apiResponse);
-  }
-
-  static badRequest(params: Omit<ErrorParams, "statusCode">): Response {
-    return this.error({ ...params, statusCode: 400 });
-  }
-
-  static unauthorized(
-    params: Omit<ErrorParams, "statusCode"> & { error?: string | Error }
-  ): Response {
-    return this.error({
-      ...params,
-      error: params.error || "Unauthorized",
-      statusCode: 401,
-    });
-  }
-
-  static forbidden(
-    params: Omit<ErrorParams, "statusCode"> & { error?: string | Error }
-  ): Response {
-    return this.error({
-      ...params,
-      error: params.error || "Forbidden",
-      statusCode: 403,
-    });
-  }
-
-  static notFound(
-    params: Omit<ErrorParams, "statusCode"> & { error?: string | Error }
-  ): Response {
-    return this.error({
-      ...params,
-      error: params.error || "Not Found",
-      statusCode: 404,
-    });
-  }
-
-  static internalServerError(
-    params: Omit<ErrorParams, "statusCode">
-  ): Response {
-    return this.error({ ...params, statusCode: 500 });
+    return response.status(finalStatusCode).json(apiResponse);
   }
 }

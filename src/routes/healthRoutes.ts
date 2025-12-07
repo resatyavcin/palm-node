@@ -3,8 +3,8 @@ import express from "express";
 const router = express.Router();
 
 //controllers
-import { checkHealth } from "../controllers/healthController";
+import { checkHealthController } from "../controllers/healthController";
 
-router.get("/", checkHealth);
+router.get("/", checkHealthController);
 
 export default router;

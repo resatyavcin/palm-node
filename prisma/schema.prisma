@@ -19,3 +19,32 @@ model SystemHealth {
   @@schema("cor")      
 }
 
+model SuccessMessage {
+  id         Int      @id @default(autoincrement())
+  key        String   @unique
+  tr         String
+  en         String
+  statusCode Int      @default(200)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("success_messages")
+  @@schema("cor")
+}
+
+model ErrorMessage {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique
+  tr             String
+  en             String
+  friendlyMessage String?
+  description    String?
+  isBusinessError Boolean  @default(false)
+  statusCode     Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("error_messages")
+  @@schema("cor")
+}
+

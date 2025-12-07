@@ -11,7 +11,11 @@
     "//": "İşin bitince her şeyi kapatmak için yardımcı komut",
     "docker:stop": "docker compose down -v",
     "start": "node dist/server.js",
-    "build": "tsc"
+    "build": "tsc",
+    "prisma:seed": "ts-node prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",

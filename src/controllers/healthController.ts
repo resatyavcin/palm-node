@@ -1,37 +1,32 @@
 import { Request, Response } from "express";
-import { prisma } from "../lib/prisma";
 import { ResponseHelper } from "../utils/response";
+import { checkHealth } from "../services/healthService";
+import { MessageHelper } from "../utils/messages";
 
-export const checkHealth = async (req: Request, res: Response) => {
+export const checkHealthController = async (
+  request: Request,
+  response: Response
+) => {
   try {
-    const systemHealth = await prisma.systemHealth.findFirst({
-      orderBy: {
-        id: "desc",
-      },
-    });
+    const systemHealth = await checkHealth();
 
-    if (!systemHealth) {
-      await prisma.systemHealth.create({
-        data: {
-          isHealth: true,
-        },
-      });
-    }
+    const data = {
+      status: "UP",
+      database: (await MessageHelper.getMessage("healthCheck")).message,
+      isHealth: systemHealth?.isHealth ?? true,
+    };
 
-    return ResponseHelper.success({
-      response: res,
-      data: {
-        status: "UP",
-        database: "Connected",
-        isHealth: systemHealth?.isHealth ?? true,
-      },
-      message: "System is healthy",
+    return await ResponseHelper.success({
+      response,
+      request,
+      data,
+      messageKey: "healthCheck",
     });
   } catch (error) {
-    return ResponseHelper.internalServerError({
-      response: res,
-      error: error instanceof Error ? error : new Error("Unknown error"),
-      message: "Database connection failed",
+    return await ResponseHelper.error({
+      response,
+      request,
+      messageKey: "databaseConnectionFailed",
     });
   }
 };
