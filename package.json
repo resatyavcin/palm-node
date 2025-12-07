@@ -5,8 +5,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "start": "node dist/server.js",
+    "//": "Docker'ı başlatır, veritabanının hazır olmasını bekler (opsiyonel sleep) ve sunucuyu açar",
+    "predev": "docker compose up -d",
     "dev": "nodemon --exec ts-node src/server.ts",
+    "//": "İşin bitince her şeyi kapatmak için yardımcı komut",
+    "docker:stop": "docker compose down -v",
+    "start": "node dist/server.js",
     "build": "tsc"
   },
   "keywords": [],
@@ -17,12 +21,16 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
     "nodemon": "^3.1.11",
+    "prisma": "^6.19.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.0",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "pg": "^8.16.3"
   }
 }

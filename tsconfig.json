@@ -15,6 +15,6 @@
     "skipLibCheck": true,
     "downlevelIteration": true
   },
-  "include": ["index.ts", "src/**/*"],
+  "include": ["index.ts", "src/**/*", "lib"],
   "exclude": ["node_modules", "tests", "dist"]
 }
