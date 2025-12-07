@@ -2,6 +2,3 @@ node_modules
 dist
 .env
 /generated/prisma
-docker-compose.yaml
-postgres_data
-postgres_data_v2
