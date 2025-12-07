@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { ResponseHelper } from "../utils/response";
 
 export const checkHealth = async (req: Request, res: Response) => {
   try {
@@ -17,18 +18,20 @@ export const checkHealth = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(200).json({
-      status: "UP",
-      database: "Connected",
-      isHealth: systemHealth?.isHealth ?? true,
-      timestamp: new Date().toISOString(),
+    return ResponseHelper.success({
+      response: res,
+      data: {
+        status: "UP",
+        database: "Connected",
+        isHealth: systemHealth?.isHealth ?? true,
+      },
+      message: "System is healthy",
     });
   } catch (error) {
-    res.status(500).json({
-      status: "DOWN",
-      database: "Disconnected",
-      error: error instanceof Error ? error.message : "Unknown error",
-      timestamp: new Date().toISOString(),
+    return ResponseHelper.internalServerError({
+      response: res,
+      error: error instanceof Error ? error : new Error("Unknown error"),
+      message: "Database connection failed",
     });
   }
 };
