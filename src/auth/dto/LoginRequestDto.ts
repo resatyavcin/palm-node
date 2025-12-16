@@ -1,4 +1,3 @@
-// auth/dto/login.dto.ts
 import { IsEmail } from 'class-validator';
 
 export class LoginDto {

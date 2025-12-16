@@ -1,19 +1,42 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/LoginDto';
-import { RegisterDto } from './dto/RegisterDto';
+
+//dtos
+import { LoginDto } from './dto/LoginRequestDto';
+import { RegisterDto } from './dto/RegisterRequestDto';
+import { RegisterResponseDto } from './dto/RegisterResponseDto';
+import { LoginResponseDto } from './dto/LoginResponseDto';
+import { ResponseEntity } from 'src/common/dto/ResponseEntity';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
+  @HttpCode(HttpStatus.CREATED)
+  register(
+    @Body() dto: RegisterDto,
+  ): Promise<ResponseEntity<RegisterResponseDto>> {
     return this.authService.register(dto.email, dto.password);
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
+  @HttpCode(HttpStatus.OK)
+  login(@Body() dto: LoginDto): Promise<ResponseEntity<LoginResponseDto>> {
     return this.authService.login(dto.email, dto.password);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refresh(@Req() req) {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    return this.authService.refreshToken(token);
   }
 }
