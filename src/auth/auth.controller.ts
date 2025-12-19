@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
@@ -14,6 +16,7 @@ import { RegisterDto } from './dto/RegisterRequestDto';
 import { RegisterResponseDto } from './dto/RegisterResponseDto';
 import { LoginResponseDto } from './dto/LoginResponseDto';
 import { ResponseEntity } from 'src/common/dto/ResponseEntity';
+import { RefreshResponseDto } from './dto/RefreshResponseDto';
 
 @Controller('auth')
 export class AuthController {
@@ -35,7 +38,7 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refresh(@Req() req) {
+  refresh(@Req() req): Promise<ResponseEntity<RefreshResponseDto>> {
     const token = req.headers.authorization?.replace('Bearer ', '');
     return this.authService.refreshToken(token);
   }
