@@ -6,6 +6,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JWT_EXPIRES } from 'src/common/config/expireTimes';
+import { TfaService } from './tfa/tfa.service';
+import { TfaController } from './tfa/tfa.controller';
 
 @Module({
   imports: [
@@ -15,7 +17,7 @@ import { JWT_EXPIRES } from 'src/common/config/expireTimes';
       signOptions: { expiresIn: JWT_EXPIRES.ACCESS_TOKEN_EXPIRE_TIME },
     }),
   ],
-  providers: [AuthService, PrismaService, JwtStrategy],
-  controllers: [AuthController],
+  providers: [AuthService, PrismaService, JwtStrategy, TfaService],
+  controllers: [AuthController, TfaController],
 })
 export class AuthModule {}
